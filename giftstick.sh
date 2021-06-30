@@ -1,4 +1,7 @@
-export PATH=/opt/minithon/bin:$PATH
+# Use this script to run GiftStick in a MacOS recovery environment
+
+PREFIX="/opt/minithon"
+export PATH="${PREFIX}/bin:$PATH"
 
 function check_env {
   local fail=false
@@ -15,6 +18,13 @@ function check_env {
     fail=true
   fi
 
+  if ! [[ -f "${PREFIX}/ssl/cert.pem" ]]; then
+    echo "Default SSL cert ${PREFIX}/ssl/cert.pem does not exist"
+    echo "consider running the following:"
+    echo "ln -s ${PREFIX}/lib/python3.9/site-packages/certifi/cacert.pem ${PREFIX}/ssl/cert.pem"
+    fail=true
+  fi
+
   if $fail; then
     echo "Please fix above errors"
     exit 1
@@ -24,8 +34,6 @@ function check_env {
 
 check_env
 exit 0
-assert git
-assert du
 
 assert /opt/minithon/ssl/cert.pem is /opt/minithon//lib/python3.9/site-packages/certifi/cacert.pem
 
