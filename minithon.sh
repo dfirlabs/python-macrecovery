@@ -17,18 +17,24 @@ set -e
 
 PREFIX="/opt/minithon"
 FORCE_INSTALL=false
+OUTPUT="minithon.tgz"
+GCSURL=
 
 WORKDIR="$(mktemp -d)"
 
 function usage {
   echo "Builds the required environment to run python in a MacOS Recovery console"
   echo
-  echo "Syntax: $(basename "$0") [-h] [--prefix=/opt/minithon]"
+  echo "Syntax: $(basename "$0") [-h] [-f] [--prefix=/opt/minithon]"
   echo "options:"
   echo "-f           Force reinstall of all tools."
   echo "-h           Print this Help."
+  echo "--output=<path>"
+  echo "             Where to drop the generated file (default: minithon.tgz)."
   echo "--prefix=<prefix>"
   echo "             Sets the prefix for all paths (default: /opt/minithon)."
+  echo "--url=<gs://url>"
+  echo "             Uploads the generated archive to a GCS URL"
   echo
   exit 0
 }
@@ -171,14 +177,30 @@ function cleanup {
   echo
 }
 
+function upload {
+  local readonly archive=$1
+  local readonly gcs_url=$2 
+
+  echo "upload ${archive} to ${gcs_url}"
+  gsutil cp "${archive}" "${gcs_url}"
+}
+
 for i in "$@"; do
   case $i in
     -f|--force)
       FORCE_INSTALL=true
       shift # past argument=value
       ;;
+    --output=*)
+      OUTPUT="${i#*=}"
+      shift # past argument=value
+      ;;
     --prefix=*)
       PREFIX="${i#*=}"
+      shift # past argument=value
+      ;;
+    --url=*)
+      GCSURL="${i#*=}"
       shift # past argument=value
       ;;
     -h|--help)
@@ -195,7 +217,9 @@ done
 
 check_env
 
-sudo mkdir -p "${PREFIX}"
+if [[ ! -d "${PREFIX}" ]]; then
+  sudo mkdir -p "${PREFIX}"
+fi
 
 install_libffi
 install_openssl
@@ -204,9 +228,15 @@ install_du
 install_git
 install_python39
 
-echo "Creating minithon.tgz"
-tar czf minithon.tgz "${PREFIX}"
-echo "minithon.tgz was successfully created"
+echo "Creating ${OUTPUT} archive"
+tar czf "${OUTPUT}" "${PREFIX}"
+echo "Archive ${OUTPUT} was successfully created"
 
+if [[ ! "${GCSURL}" == "" ]]; then
+  upload "${OUTPUT}" "${GCSURL}"
+fi
+
+echo "Calculating SHA1"
+shasum "${OUTPUT}"
 cleanup
 
