@@ -6,15 +6,18 @@
 set -e
 
 PREFIX="/opt/minithon"
+TARBALLURL=""
+WORKDIR=""
 
 function usage {
   echo "Unpacks a working python environment and tries to run GiftStick acquisition code."
   echo
-  echo "Syntax: $(basename "$0") [-h] [--prefix=/opt/minithon]"
+  echo "Syntax: $(basename "$0") [-h] [--prefix=${PREFIX}] --url=<url_to_minithon.tgz>"
   echo "options:"
-  echo "-h           Print this Help."
+  echo "--url        Where to pull the minithon environment from (required)."
   echo "--prefix=<prefix>"
-  echo "             Sets the prefix for all paths (default: /opt/minithon)."
+  echo "             Sets the prefix for all paths (default: ${PREFIX})."
+  echo "-h           Print this Help."
   echo
   exit 0
 }
@@ -45,24 +48,27 @@ function check_env {
   return 0
 }
 
-
-WORKDIR="$(mktemp -d)"
-echo "working from $WORKDIR"
-
 function prepare_env() {
+  local tarball=""
   if [[ ! -f "${PREFIX}/bin/python3" ]]; then
     echo "Preparing necessary environment"
 
-    if [[ "${GCSURL}" == "" ]]; then
-      echo "please specify a gcs URL to pull the environment from with --url"
+    if [[ "${TARBALLURL}" == "" ]]; then
+      echo "please specify a URL to pull the environment from with --url"
       exit 1
     fi
 
     pushd "${WORKDIR}"
-    echo "Pulling Minithon from $GCSURL" 
-    curl -L -O "${GCSURL}"
+    echo "Pulling Minithon from $TARBALLURL"
+    curl -L -O "${TARBALLURL}"
 
-    tar xvzf -C "${PREFIX}" "${GCSURL##*/}"
+    tarball="${TARBALLURL##*/}"
+    echo "Downloaded ${tarball}."
+    shasum "${tarball}"
+    echo "Is this correct? (ctrl-c) if not"
+    read
+
+    tar xvzf -C "${PREFIX}" "${tarball}"
 
     export PATH="${PREFIX}/bin:${PATH}"
 
@@ -110,7 +116,7 @@ for i in "$@"; do
       shift # past argument=value
       ;;
     --url=*)
-      GCSURL="${i#*=}"
+      TARBALLURL="${i#*=}"
       shift # past argument=value
       ;;
     -h|--help)
@@ -125,7 +131,16 @@ for i in "$@"; do
   esac
 done
 
+WORKDIR="$(mktemp -d)"
+echo "working from $WORKDIR"
+
 prepare_env
+check_env
 prepare_giftstick
 
+echo "Everything is ready"
+echo "You can run the acquisition code, ie:"
+echo "PYTHONPATH=. python auto_forensicate/auto_acquire.py --gs_keyfile sa.json --acquire directory gs://<remotebucket>/"
+echo ""
+echo "see https://github.com/google/GiftStick for more information"
 cd "${WORKDIR}"/GiftStick
