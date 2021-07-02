@@ -6,7 +6,9 @@
 # - openssl
 # - readline
 # This installs also some extra tools:
+# - dirname
 # - du
+# - patch
 # - git
 #
 # Everything is linked with /opt/minithon as a prefix.
@@ -121,11 +123,14 @@ function install_readline {
   fi
 }
 
-function install_du {
+function install_utils {
   if $FORCE_INSTALL || [[ ! -f "${PREFIX}/bin/du" ]] ; then
-    echo "copying /usr/bin/du"
     sudo mkdir -p "${PREFIX}/bin"
+    echo "copying some utils"
+    sudo cp "/usr/bin/dirname "${PREFIX}/bin/"
     sudo cp "/usr/bin/du" "${PREFIX}/bin/"
+    sudo cp "/usr/bin/patch" "${PREFIX}/bin/"
+
   else
     echo "${PREFIX}/bin/du already present, skipping"
   fi
@@ -224,12 +229,12 @@ fi
 install_libffi
 install_openssl
 install_readline
-install_du
+install_utils
 install_git
 install_python39
 
 echo "Creating ${OUTPUT} archive"
-tar czf "${OUTPUT}" "${PREFIX}"
+tar Pczf "${OUTPUT}" "${PREFIX}"
 echo "Archive ${OUTPUT} was successfully created"
 
 if [[ ! "${GCSURL}" == "" ]]; then
