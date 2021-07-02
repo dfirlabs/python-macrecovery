@@ -5,16 +5,17 @@
 # - libffi
 # - openssl
 # - readline
-# This installs also some extra tools:
+# This installs also some extra tools, that are required for running other scripts:
 # - dirname
 # - du
 # - patch
 # - git
 #
-# Everything is linked with /opt/minithon as a prefix.
+# Everything is linked with /opt/minithon as a prefix (can be changed with --prefix).
 #
-# The script then creates a tarball minithon.tgz which contains everything
-# to then extract as /opt/minithon
+# The script then creates a tarball of the above prefix as minithon.tgz
+#  (can be changed with --output).
+
 set -e
 
 PREFIX="/opt/minithon"
@@ -27,14 +28,14 @@ WORKDIR="$(mktemp -d)"
 function usage {
   echo "Builds the required environment to run python in a MacOS Recovery console"
   echo
-  echo "Syntax: $(basename "$0") [-h] [-f] [--prefix=/opt/minithon]"
+  echo "Syntax: $(basename "$0") [-h] [-f] [--prefix=${PREFIX}]"
   echo "options:"
   echo "-f           Force reinstall of all tools."
   echo "-h           Print this Help."
   echo "--output=<path>"
-  echo "             Where to drop the generated file (default: minithon.tgz)."
+  echo "             Where to drop the generated file (default: ${OUTPUT})."
   echo "--prefix=<prefix>"
-  echo "             Sets the prefix for all paths (default: /opt/minithon)."
+  echo "             Sets the prefix for all paths (default: ${PREFIX})."
   echo "--url=<gs://url>"
   echo "             Uploads the generated archive to a GCS URL"
   echo
@@ -130,7 +131,6 @@ function install_utils {
     sudo cp "/usr/bin/dirname "${PREFIX}/bin/"
     sudo cp "/usr/bin/du" "${PREFIX}/bin/"
     sudo cp "/usr/bin/patch" "${PREFIX}/bin/"
-
   else
     echo "${PREFIX}/bin/du already present, skipping"
   fi
@@ -241,7 +241,7 @@ if [[ ! "${GCSURL}" == "" ]]; then
   upload "${OUTPUT}" "${GCSURL}"
 fi
 
-echo "Calculating SHA1"
-shasum "${OUTPUT}"
+echo "MD5 sum for ${OUTPUT} is $(md5 -q "${OUTPUT}")"
+
 cleanup
 
