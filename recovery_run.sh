@@ -12,7 +12,7 @@ WORKDIR=""
 function usage {
   echo "Unpacks a working python environment and tries to run GiftStick acquisition code."
   echo
-  echo "Syntax: $(basename "$0") [-h] [--prefix=${PREFIX}] --url=<url_to_minithon.tgz>"
+  echo "Syntax: recovery_run.sh [-h] [--prefix=${PREFIX}] --url=<url_to_minithon.tgz>"
   echo "options:"
   echo "--url        Where to pull the minithon environment from (required)."
   echo "--prefix=<prefix>"
@@ -32,12 +32,16 @@ function check_env {
     echo "command git not found"
     fail=true
   fi
+  if ! [[ -x "$(command -v dirname)" ]] ; then
+    echo "command dirname not found"
+    fail=true
+  fi
   if ! [[ -x "$(command -v du)" ]] ; then
-    echo "command git not found"
+    echo "command du not found"
     fail=true
   fi
   if ! [[ -x "$(command -v python3)" ]] ; then
-    echo "command git not found"
+    echo "command python3 not found"
     fail=true
   fi
 
@@ -68,7 +72,8 @@ function prepare_env() {
     echo "Is this correct? (ctrl-c) if not"
     read
 
-    tar xvzf -C "${PREFIX}" "${tarball}"
+    # In the recovery environment, /opt is actually a symlink to /System/Volumes/Data/opt
+    tar -C /System/Volumes/Data -x -z -f "${tarball}"
 
     export PATH="${PREFIX}/bin:${PATH}"
 
@@ -138,9 +143,9 @@ prepare_env
 check_env
 prepare_giftstick
 
-echo "Everything is ready"
-echo "You can run the acquisition code, ie:"
+echo "Everything is ready! You can run the acquisition code, ie:"
 echo "PYTHONPATH=. python auto_forensicate/auto_acquire.py --gs_keyfile sa.json --acquire directory gs://<remotebucket>/"
 echo ""
+echo "Spawning a new shell in ${WORKDIR}/GiftStick, with PATH containing $PREFIX"
 echo "see https://github.com/google/GiftStick for more information"
-cd "${WORKDIR}"/GiftStick
+$SHELL -i
