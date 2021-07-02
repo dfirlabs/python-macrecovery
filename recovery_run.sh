@@ -40,6 +40,10 @@ function check_env {
     echo "command du not found"
     fail=true
   fi
+  if ! [[ -x "$(command -v patch)" ]] ; then
+    echo "command patch not found"
+    fail=true
+  fi
   if ! [[ -x "$(command -v python3)" ]] ; then
     echo "command python3 not found"
     fail=true
