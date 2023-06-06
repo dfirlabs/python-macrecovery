@@ -128,7 +128,7 @@ function install_utils {
   if $FORCE_INSTALL || [[ ! -f "${PREFIX}/bin/du" ]] ; then
     sudo mkdir -p "${PREFIX}/bin"
     echo "copying some utils"
-    sudo cp "/usr/bin/dirname "${PREFIX}/bin/"
+    sudo cp "/usr/bin/dirname" "${PREFIX}/bin/"
     sudo cp "/usr/bin/du" "${PREFIX}/bin/"
     sudo cp "/usr/bin/patch" "${PREFIX}/bin/"
   else
