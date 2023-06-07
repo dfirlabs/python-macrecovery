@@ -152,7 +152,7 @@ echo
 echo
 echo "Everything is ready!!! You can run the acquisition code, ie:"
 echo
-echo "PYTHONPATH=. python3 auto_forensicate/auto_acquire.py --gs_keyfile sa.json --acquire directory gs://<remotebucket>/"
+echo "DYLD_LIBRARY_PATH=/opt/minithon/lib PYTHONPATH=/opt/minithon/:. python3 auto_forensicate/auto_acquire.py --gs_keyfile <path to sa.json> --acquire directory gs://<remotebucket>/"
 echo
 echo "see https://github.com/google/GiftStick for more information"
 echo
