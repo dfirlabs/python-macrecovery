@@ -20,7 +20,7 @@ set -e
 
 PREFIX="/opt/minithon"
 FORCE_INSTALL=false
-OUTPUT="minithon.tgz"
+OUTPUT="minithon-$(uname -m).tgz"
 GCSURL=
 
 WORKDIR="$(mktemp -d)"
@@ -95,10 +95,10 @@ function install_openssl {
   if $FORCE_INSTALL || [[ ! -f "${PREFIX}/bin/openssl" ]] ; then
     echo "Building libssl"
     pushd "${WORKDIR}"
-    curl -L -O https://www.openssl.org/source/openssl-1.1.1k.tar.gz
-    tar xvzf openssl-1.1.1k.tar.gz
-    cd openssl-1.1.1k
-    ./Configure darwin64-x86_64-cc shared enable-ec_nistp_64_gcc_128 no-ssl2 no-ssl3 no-comp --prefix="${PREFIX}"
+    curl -L -O https://www.openssl.org/source/openssl-1.1.1u.tar.gz
+    tar xvzf openssl-1.1.1u.tar.gz
+    cd openssl-1.1.1u
+    ./Configure "darwin64-${uname -m}-cc" shared enable-ec_nistp_64_gcc_128 no-ssl2 no-ssl3 no-comp --prefix="${PREFIX}" --openssldir="${PREFIX}"
     make depend
     make -j8
     sudo make install_sw
@@ -167,7 +167,7 @@ function install_python39 {
     cd cpython
     git checkout 3.9
     export PATH="${PREFIX}/bin:$PATH"
-    PKG_CONFIG="pkg-config" PKG_CONFIG_PATH="${PREFIX}/lib/pkgconfig/" CPPFLAGS="-I${PREFIX}/include" LDFLAGS="-L${PREFIX}/lib" ./configure  --with-static-libpython --prefix="${PREFIX}" --with-system-ffi
+    PKG_CONFIG="pkg-config" PKG_CONFIG_PATH="${PREFIX}/lib/pkgconfig/" CPPFLAGS="-I${PREFIX}/include" LDFLAGS="-L${PREFIX}/lib" ./configure  --with-static-libpython --prefix="${PREFIX}" --with-system-ffi --with-openssl="${PREFIX}"
 
     make -j8
     sudo make install
